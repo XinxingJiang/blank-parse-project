@@ -17,8 +17,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // setup window
+        // Setup window
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        
+        // Enable Parse local datastore
+        Parse.enableLocalDatastore()
         
         // Setup Parse credentials
         Parse.setApplicationId("application_id", clientKey: "client_key")
