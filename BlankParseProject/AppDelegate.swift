@@ -17,10 +17,49 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+        // setup window
+        window = UIWindow(frame: UIScreen.mainScreen().bounds)
+        
         // Setup Parse credentials
         Parse.setApplicationId("application_id", clientKey: "client_key")
         
+        // Setup push notification
+        if application.respondsToSelector("registerUserNotificationSettings:") {
+            let userNotificationTypes: UIUserNotificationType = [UIUserNotificationType.Alert, UIUserNotificationType.Badge, UIUserNotificationType.Sound]
+            let settings = UIUserNotificationSettings(forTypes: userNotificationTypes, categories: nil)
+            application.registerUserNotificationSettings(settings)
+            application.registerForRemoteNotifications()
+        } else {
+            let types: UIRemoteNotificationType = [UIRemoteNotificationType.Badge, UIRemoteNotificationType.Alert, UIRemoteNotificationType.Sound]
+            application.registerForRemoteNotificationTypes(types)            
+        }
+        
         return true
+    }
+    
+    //--------------------------------------
+    // MARK: Push Notifications
+    //--------------------------------------
+    
+    func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+        let installation = PFInstallation.currentInstallation()
+        installation.setDeviceTokenFromData(deviceToken)
+        installation.saveInBackground()
+        
+        PFPush.subscribeToChannelInBackground("") { (succeeded: Bool, error: NSError?) in
+            if succeeded {
+                print("ParseStarterProject successfully subscribed to push notifications on the broadcast channel.");
+            } else {
+                print("ParseStarterProject failed to subscribe to push notifications on the broadcast channel with error = %@.", error)
+            }
+        }
+    }
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject]) {
+        PFPush.handlePush(userInfo)
+        if application.applicationState == UIApplicationState.Inactive {
+            PFAnalytics.trackAppOpenedWithRemoteNotificationPayload(userInfo)
+        }
     }
 
     func applicationWillResignActive(application: UIApplication) {
